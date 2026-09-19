@@ -1666,6 +1666,16 @@ async function checkForNewNotifs(){
     MSGS=freshMsgs;
     if(rec.calls)CALLS=rec.calls;
     if(rec.thematic)window._tp=rec.thematic;
+    // Also keep the schedule (SC) in sync. Without this, a teacher who was already
+    // logged in when the admin set up or changed the class schedule would keep working
+    // from a stale/empty local copy — and getDates() treats "no schedule found for this
+    // subject" as "no restriction", which opened every weekday for grading instead of
+    // just the days the class actually has that lesson. Refreshing SC here means the
+    // next time getDates() runs (switching month/week/class, or reopening the page) it
+    // uses the real schedule, without forcing a live-rebuild of an open grade table that
+    // could contain not-yet-saved edits.
+    const freshSc=(await bGet(BC).catch(()=>null))||null;
+    if(freshSc&&typeof freshSc==='object')SC=freshSc;
     // If the person is currently looking at a page driven by this data, refresh it
     // live instead of making them navigate away and back (or reload) to see it.
     // Deliberately skipped for the teacher's own grade-entry page ('gr-book'):
